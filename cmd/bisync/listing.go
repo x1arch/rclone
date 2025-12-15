@@ -389,8 +389,8 @@ func parseHash(str string) (string, string, error) {
 	if str == "-" {
 		return "", "", nil
 	}
-	if pos := strings.Index(str, ":"); pos > 0 {
-		name, val := str[:pos], str[pos+1:]
+	if before, after, ok := strings.Cut(str, ":"); ok {
+		name, val := before, after
 		if name != "" && val != "" {
 			return name, val, nil
 		}
@@ -707,8 +707,7 @@ func (b *bisyncRun) modifyListing(ctx context.Context, src fs.Fs, dst fs.Fs, res
 		prettyprint(dstList.list, "dstList", fs.LogLevelDebug)
 
 		// clear stats so we only do this once
-		accounting.MaxCompletedTransfers = 0
-		accounting.Stats(ctx).PruneTransfers()
+		accounting.Stats(ctx).RemoveDoneTransfers()
 	}
 
 	if b.DebugName != "" {
