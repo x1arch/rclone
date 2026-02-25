@@ -661,6 +661,44 @@ func (f *Fs) apiFileLocateUpload(ctx context.Context) error {
 	return nil
 }
 
+func (f *Fs) apiShare(ctx context.Context, path string, expire fs.Duration) (string, error) {
+	// 0, 1, 7, and 30 are the only valid periods, with 0 being permanent
+	var period int
+	hours := time.Duration(expire).Hours()
+	if hours <= 24 {
+		period = 1
+	} else if hours <= 168 {
+		period = 7
+	} else if hours <= 720 {
+		period = 30
+	}
+
+	data := url.Values{}
+	data.Set("schannel", "0")
+	data.Set("channel_list", "[0]")
+	data.Set("period", fmt.Sprintf("%d", period))
+	data.Set("path_list", fmt.Sprintf("[\"%s\"]", TBPath(path)))
+	// fid_list is set here officially, but seems to be optional.
+	// it has been excluded, otherwise we would have to use apiItemInfo.
+	data.Set("pwd", "")
+	data.Set("public", "1")
+
+	opt := NewRequest(http.MethodPost, "/share/pset")
+	opt.ContentType = "application/x-www-form-urlencoded"
+	opt.Body = strings.NewReader(data.Encode())
+
+	var res api.ResponseShare
+	err := f.apiExec(ctx, opt, &res)
+	if err != nil {
+		return "", err
+	}
+	if res.Err() != nil {
+		return "", res.Err()
+	}
+
+	return res.Link, nil
+}
+
 func (f *Fs) _apiFileUploadPrecreate(ctx context.Context, path string, size int64, modTime time.Time) (*api.ResponsePrecreate, error) {
 	opt := NewRequest(http.MethodPost, "/api/precreate")
 

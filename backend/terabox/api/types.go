@@ -66,6 +66,12 @@ type ResponseDownload struct {
 	} `json:"file_info"`
 }
 
+// ResponseShare contain Share link
+type ResponseShare struct {
+	ErrorAPI
+	Link string `json:"link"`
+}
+
 // ResponseHomeInfo download file sign
 type ResponseHomeInfo struct {
 	ErrorAPI
