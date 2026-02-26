@@ -39,6 +39,7 @@ import (
 var (
 	_ fs.Fs             = (*Fs)(nil)
 	_ fs.Abouter        = (*Fs)(nil)
+	_ fs.PublicLinker   = (*Fs)(nil)
 	_ fs.Copier         = (*Fs)(nil)
 	_ fs.Mover          = (*Fs)(nil)
 	_ fs.DirMover       = (*Fs)(nil)
@@ -275,6 +276,16 @@ func (f *Fs) About(ctx context.Context) (*fs.Usage, error) {
 
 	free := info.Total - info.Used // the server returns a free value equal to the total, that's why we calculate it manually
 	return &fs.Usage{Total: &info.Total, Used: &info.Used, Free: &free}, nil
+}
+
+//
+// fs.PublicLinker Interface implementation [optional]
+//------------------------------------------------------------------------------------------------------------------------
+
+// PublicLink returns a link for downloading without an account.
+func (f *Fs) PublicLink(ctx context.Context, remote string, expire fs.Duration, unlink bool) (string, error) {
+	debug(f.opt, 1, "PublicLink %s; %s;", remote, expire.String())
+	return f.apiShare(ctx, f.opt.Enc.FromStandardPath(libPath.Join(f.root, remote)), expire)
 }
 
 //
